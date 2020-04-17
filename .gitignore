@@ -9,4 +9,4 @@ output
 .settings
 *.coverprofile
 *.out
-junit.xml
+junit*.xml

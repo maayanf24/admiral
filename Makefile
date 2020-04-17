@@ -1,21 +1,27 @@
-status ?= onetime
-version ?= 1.14.6
 
-TARGETS := $(shell ls scripts)
+ifneq (,$(DAPPER_HOST_ARCH))
 
-.dapper:
-	@echo Downloading dapper
-	@curl -sL https://releases.rancher.com/dapper/latest/dapper-`uname -s`-`uname -m` > .dapper.tmp
-	@@chmod +x .dapper.tmp
-	@./.dapper.tmp -v
-	@mv .dapper.tmp .dapper
+# Running in Dapper
 
-shell:
-	./.dapper -m bind -s
+include $(SHIPYARD_DIR)/Makefile.inc
 
-$(TARGETS): .dapper
-	./.dapper -m bind $@ $(status) $(version)
+TARGETS := $(shell ls -p scripts | grep -v -e /)
 
-.DEFAULT_GOAL := ci
+e2e: vendor/modules.txt clusters
+	./scripts/kind-e2e/e2e.sh
+
+$(TARGETS): vendor/modules.txt
+	./scripts/$@
 
 .PHONY: $(TARGETS)
+
+else
+
+# Not running in Dapper
+
+include Makefile.dapper
+
+endif
+
+# Disable rebuilding Makefile
+Makefile Makefile.dapper Makefile.inc: ;
